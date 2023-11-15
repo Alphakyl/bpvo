@@ -22,7 +22,7 @@
 #ifndef BPVO_TYPES_H
 #define BPVO_TYPES_H
 
-#include <Eigen/Core>
+#include <eigen3/Eigen/Core>
 
 #include <memory>
 #include <vector>

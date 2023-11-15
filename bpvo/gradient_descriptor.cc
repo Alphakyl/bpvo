@@ -26,7 +26,7 @@
 #include <opencv2/imgproc/imgproc.hpp>
 
 #include <type_traits>
-#include <Eigen/Core>
+#include <eigen3/Eigen/Core>
 
 namespace bpvo {
 

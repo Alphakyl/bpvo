@@ -25,8 +25,8 @@
 #include <bpvo/debug.h>
 #include <bpvo/utils.h>
 
-#include <Eigen/Core>
-#include <Eigen/LU>
+#include <eigen3/Eigen/Core>
+#include <eigen3/Eigen/LU>
 
 namespace bpvo {
 

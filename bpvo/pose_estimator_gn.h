@@ -25,7 +25,7 @@
 #include <bpvo/pose_estimator_base.h>
 #include <bpvo/debug.h>
 #include <bpvo/linear_system_builder.h>
-#include <Eigen/Cholesky>
+#include <eigen3/Eigen/Cholesky>
 
 namespace bpvo {
 

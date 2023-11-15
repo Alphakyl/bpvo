@@ -1,5 +1,5 @@
-#include <opencv2/core.hpp>
-#include <opencv2/calib3d.hpp>
+#include <opencv2/core/core.hpp>
+#include <opencv2/calib3d/calib3d.hpp>
 
 #include "bpvo/config_file.h"
 
@@ -17,16 +17,17 @@ struct StereoAlgorithm::Impl
     SemiGlobalBlockMatching,
     SemiGlobalMatching,
     RapidSemiGlobalMatching
-  };
+  }; // Algorithm
 
   Impl(const ConfigFile& cf)
       : _algorithm(Algorithm::BlockMatching), _state(NULL)
   {
     auto alg = cf.get<std::string>("StereoAlgorithm", "BlockMatching");
 
-    if (icompare("SGBM", alg) || icompare("SemiGlobalBlockMatching", alg))
+    if(icompare("SGBM", alg) || icompare("SemiGlobalBlockMatching", alg))
     {
       _algorithm = Algorithm::SemiGlobalBlockMatching;
+      // _sgbm = make_unique<cv::StereoSGBM>(
       _sgbm = cv::StereoSGBM::create(
           cf.get<int>("minDisparity"),
           cf.get<int>("numberOfDisparities"),
@@ -38,7 +39,7 @@ struct StereoAlgorithm::Impl
           cf.get<int>("speckleRange", 0),
           (bool)cf.get<int>("fullDP", 0));
     }
-    else if (icompare("SGM", alg) || icompare("SemiGlobalMatching", alg))
+    else if(icompare("SGM", alg) || icompare("SemiGlobalMatching", alg))
     {
       _algorithm = Algorithm::SemiGlobalMatching;
       SgmStereo::Config conf;
@@ -51,89 +52,111 @@ struct StereoAlgorithm::Impl
       conf.smoothnessPenaltyLarge = cf.get<int>("smoothnessPenaltyLarge", 1600);
       conf.consistencyThreshold = cf.get<int>("consistencyThreshold", 1);
       conf.disparityFactor = cf.get<double>("disparityFactor", 256.0);
-      conf.censusWeightFactor = cf.get<double>("censusWeightFactor", 1.0 / 6.0);
+      conf.censusWeightFactor = cf.get<double>("censusWeightFactor", 1.0/6.0);
 
       _sgm_stereo = make_unique<SgmStereo>(conf);
     }
-    else if (icompare("RSGM", alg))
+    else if(icompare("RSGM", alg))
     {
       _algorithm = Algorithm::RapidSemiGlobalMatching;
       _rsgm = make_unique<RSGM>();
     }
-    else if (icompare("BlockMatching", alg) || icompare("BM", alg))
+    else if(icompare("BlockMatching", alg) || icompare("BM", alg))
     {
       _algorithm = Algorithm::BlockMatching;
-      _state = cv::StereoBM::create();
+      // _state = cvCreateStereoBMState();
+      cv::Ptr<cv::StereoBM> _state = cv::StereoBM::create();
+      // default values from opencv/modules/calib3d/src/stereobm.cpp
+      // _state->preFilterType = cf.get<int>("preFilterType", CV_STEREO_BM_XSOBEL);
+      // _state->preFilterSize = cf.get<int>("preFilterSize", 9);
+      // _state->preFilterCap = cf.get<int>("preFilterCap", 31);
 
-      // Set the parameters for StereoBM
+      // _state->SADWindowSize = cf.get<int>("SADWindowSize", 15);
+      // _state->minDisparity = cf.get<int>("minDisparity", 0);
+      // _state->numberOfDisparities = cf.get<int>("numberOfDisparities"); // must be provided
+
+      // _state->textureThreshold = cf.get<int>("textureThreshold", 10);
+      // _state->uniquenessRatio = cf.get<int>("uniquenessRatio", 15);
+      // _state->speckleWindowSize = cf.get<int>("speckleWindowSize", 0);
+      // _state->speckleRange = cf.get<int>("speckleRange", 0);
+      // _state->trySmallerWindows = cf.get<int>("trySmallerWindows", 0);
+      // _state->disp12MaxDiff = cf.get<int>("disp12MaxDiff", -1);
       _state->setPreFilterType(cf.get<int>("preFilterType", cv::StereoBM::PREFILTER_XSOBEL));
       _state->setPreFilterSize(cf.get<int>("preFilterSize", 9));
       _state->setPreFilterCap(cf.get<int>("preFilterCap", 31));
 
       _state->setBlockSize(cf.get<int>("SADWindowSize", 15));
       _state->setMinDisparity(cf.get<int>("minDisparity", 0));
-      _state->setNumDisparities(cf.get<int>("numberOfDisparities"));
+      _state->setNumDisparities(cf.get<int>("numberOfDisparities")); // must be provided
 
       _state->setTextureThreshold(cf.get<int>("textureThreshold", 10));
       _state->setUniquenessRatio(cf.get<int>("uniquenessRatio", 15));
       _state->setSpeckleWindowSize(cf.get<int>("speckleWindowSize", 0));
       _state->setSpeckleRange(cf.get<int>("speckleRange", 0));
-      // _state->setTrySmallerWindows(cf.get<int>("trySmallerWindows", 0));
       _state->setDisp12MaxDiff(cf.get<int>("disp12MaxDiff", -1));
-    }
-    else {
+    } else {
       THROW_ERROR(Format("Unknown stereo algorithm %s\n", alg.c_str()).c_str());
     }
   }
 
   ~Impl()
   {
-    // OpenCV 4 automatically manages the memory for StereoBM and StereoSGBM.
+    // if(_state) cvReleaseStereoBMState(&_state);
   }
 
   inline void run(const cv::Mat& left, const cv::Mat& right, cv::Mat& dmap)
   {
-    switch (_algorithm)
+    switch(_algorithm)
     {
       case Algorithm::BlockMatching:
-      {
-        assert(_state);
+        {
+          assert( _state );
+          // const CvMat left_ = left;
+          // const CvMat right_ = right;
+          const cv::Mat left_ = left;
+          const cv::Mat right_ = right;
 
-        _state->compute(left, right, dmap);
+          _dmap_buffer.create(left.size(), CV_16SC1);
+          // CvMat dmap_ = _dmap_buffer;
+          cv::Mat dmap_ = _dmap_buffer;
+          // cvFindStereoCorrespondenceBM(&left_, &right_, &dmap_, _state);
+          _state->compute(left_,right_,dmap_);
 
-        dmap.convertTo(dmap, CV_32FC1, 1.0 / 16.0, 0.0);
-      } break;
+          _dmap_buffer.convertTo(dmap, CV_32FC1, 1.0 / 16.0, 0.0 );
+        } break;
 
       case Algorithm::SemiGlobalBlockMatching:
-      {
-        assert(_sgbm);
+        {
+          assert(_sgbm);
 
-        _sgbm->compute(left, right, dmap);
+          _dmap_buffer.create(left.size(), CV_16SC1);
+          _sgbm->compute(left, right, _dmap_buffer);
 
-        dmap.convertTo(dmap, CV_32FC1, 1.0 / 16.0, 0.0);
-      } break;
+          _dmap_buffer.convertTo(dmap, CV_32FC1, 1.0 / 16.0, 0.0 );
+        } break;
 
       case Algorithm::RapidSemiGlobalMatching:
-      {
-        assert(_rsgm);
+        {
+          assert(_rsgm);
 
-        dmap.create(left.size(), CV_32FC1);
-        _rsgm->compute(left, right, dmap);
-      } break;
+          dmap.create(left.size(), CV_32FC1);
+          _rsgm->compute(left, right, dmap);
+        } break;
 
       case Algorithm::SemiGlobalMatching:
-      {
-        assert(_sgm_stereo);
+        {
+          assert(_sgm_stereo);
 
-        dmap.create(left.size(), CV_32FC1);
-        _sgm_stereo->compute(left, right, dmap);
-      } break;
+          dmap.create(left.size(), CV_32FC1);
+          _sgm_stereo->compute(left, right, dmap);
+        } break;
     }
   }
 
+
   inline short getInvalidValue() const
   {
-    return static_cast<short>(_state->getMinDisparity() - 1);
+    return static_cast<short>( _state->getMinDisparity() - 1 );
   }
 
   inline float getInvalidValueFloat() const
@@ -142,8 +165,9 @@ struct StereoAlgorithm::Impl
   }
 
   Algorithm _algorithm;
-  cv::Ptr<cv::StereoBM> _state;
-  cv::Ptr<cv::StereoSGBM> _sgbm;
+  // CvStereoBMState* _state;
+  cv::Ptr<cv::StereoBM> _state = cv::StereoBM::create();
+  UniquePointer<cv::StereoSGBM> _sgbm;
   UniquePointer<SgmStereo> _sgm_stereo;
   UniquePointer<RSGM> _rsgm;
   cv::Mat _dmap_buffer;
@@ -155,7 +179,7 @@ StereoAlgorithm::StereoAlgorithm(const ConfigFile& cf)
 StereoAlgorithm::StereoAlgorithm(std::string conf_fn)
   : StereoAlgorithm(ConfigFile(conf_fn)) {}
 
-StereoAlgorithm::~StereoAlgorithm() {}
+  StereoAlgorithm::~StereoAlgorithm() {}
 
 void StereoAlgorithm::run(const cv::Mat& left, const cv::Mat& right, cv::Mat& dmap)
 {

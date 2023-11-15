@@ -31,9 +31,9 @@ namespace bpvo {
 void IntensityDescriptor::compute(const cv::Mat& src)
 {
   if(src.channels() == 3) {
-    cv::cvtColor(src, _I, CV_BGR2GRAY);
+    cv::cvtColor(src, _I, cv::COLOR_BGR2GRAY);
   } else if(src.channels() == 4) {
-    cv::cvtColor(src, _I, CV_BGRA2GRAY);
+    cv::cvtColor(src, _I, cv::COLOR_BGRA2GRAY);
   } else {
     THROW_ERROR_IF( src.channels() != 1, "unsupported image type" );
     _I = src;

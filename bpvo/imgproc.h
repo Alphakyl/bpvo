@@ -25,7 +25,7 @@
 #include <opencv2/core/core.hpp>
 #include <bpvo/debug.h>
 
-#include <Eigen/Core>
+#include <eigen3/Eigen/Core>
 #include <type_traits>
 
 namespace bpvo {

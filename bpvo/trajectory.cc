@@ -23,7 +23,7 @@
 #include <iostream>
 #include <fstream>
 
-#include <Eigen/LU>
+#include <eigen3/Eigen/LU>
 
 namespace bpvo {
 
