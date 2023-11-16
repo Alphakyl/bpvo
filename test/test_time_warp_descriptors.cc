@@ -9,7 +9,7 @@
 using namespace bpvo;
 
 static inline
-double Run(const cv::Mat& I, DescriptorType t, int interp = CV_INTER_LINEAR)
+double Run(const cv::Mat& I, DescriptorType t, int interp = cv::INTER_LINEAR)
 {
   AlgorithmParameters p;
   p.descriptor = t;
@@ -64,7 +64,7 @@ int main()
 #if 0
   for(int i = I_pyr.size()-1; i >= 0; --i) {
     printf("size: %ix%i\n", I_pyr[i].cols, I_pyr[i].rows);
-    RunAll(I_pyr[i], CV_INTER_LINEAR);
+    RunAll(I_pyr[i], cv::INTER_LINEAR);
     printf("\n");
   }
 #endif
@@ -81,7 +81,7 @@ int main()
   for(auto& t : dtypes) {
     printf("descriptor %24s\n", ToString(t).c_str());
     for(int i = I_pyr.size()-1; i >= 0; --i) {
-      auto tt = Run(I_pyr[i], t, CV_INTER_LINEAR);
+      auto tt = Run(I_pyr[i], t, cv::INTER_LINEAR);
       printf("\tsize %ix%i time %0.2f ms\n", I_pyr[i].cols, I_pyr[i].rows, tt);
     }
   }

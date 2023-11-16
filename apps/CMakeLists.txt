@@ -10,6 +10,6 @@ list(REMOVE_ITEM src "${CMAKE_CURRENT_SOURCE_DIR}/vo_app.cc")
 foreach(f ${src})
   get_filename_component(bname ${f} NAME_WE)
   add_executable(${bname} ${f})
-  target_link_libraries(${bname} bpvo_apps bpvo_utils bpvo ${MY_LIBRARIES})
+  target_link_libraries(${bname} ${MY_LIBRARIES} bpvo_apps bpvo_utils bpvo)
 endforeach()
 

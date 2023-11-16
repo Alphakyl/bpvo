@@ -43,7 +43,7 @@ option(ENABLE_PROFILING "enable profiling" OFF)
 option(ENABLE_FAST_MATH "enable fast math" OFF)
 option(ENABLE_OMIT_FRAME_POINTER "omit frame pointer" ON)
 
-option(BUILD_TEST "build the testing stuff" OFF)
+option(BUILD_TEST "build the testing stuff" ON)
 option(BUILD_APPS "build apps" ON)
 
 
@@ -121,7 +121,7 @@ else()
 endif()
 
 # REQUIRED packages
-find_package(OpenCV 4 REQUIRED COMPONENTS core imgproc highgui)
+find_package(OpenCV 4 REQUIRED COMPONENTS core imgproc highgui calib3d)
 find_package(Eigen3  REQUIRED)
 
 include_directories(${CMAKE_CURRENT_SOURCE_DIR})
