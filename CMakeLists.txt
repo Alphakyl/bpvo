@@ -130,7 +130,7 @@ include_directories(${OpenCV_INCLUDE_DIRS} ${EIGEN_INCLUDE_DIRS})
 list(APPEND MY_LIBRARIES ${OpenCV_LIBS})
 list(APPEND MY_LIBRARIES_CORE ${OpenCV_LIBS})
 
-set(Boost_USE_STATIC_LIBS     ON)
+set(Boost_USE_STATIC_LIBS     OFF)
 set(Boost_USE_STATIC_RUNTIME  ON)
 set(Boost_USE_MULTITHREAD     ON)
 # Boost 1.70+ compatibility line
